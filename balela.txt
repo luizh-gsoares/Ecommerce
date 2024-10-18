@@ -1,0 +1,79 @@
+# CRUD de usuários
+@app.route('/user/create', methods=['GET', 'POST'])
+def create_user():
+    if request.method == 'POST':
+        username = request.form['username']
+        email = request.form['email']
+        password = request.form['password']
+        is_admin = request.form.get('is_admin') == 'on'
+        new_user = User(username=username, email=email, password=password, is_admin=is_admin)
+        db.session.add(new_user)
+        db.session.commit()
+        flash('User created successfully', 'success')
+        return redirect(url_for('admin'))
+    return render_template('user_create.html')
+ 
+@app.route('/user/update/<int:id>', methods=['GET', 'POST'])
+def update_user(id):
+    user = User.query.get_or_404(id)
+    if request.method == 'POST':
+        user.username = request.form['username']
+        user.email = request.form['email']
+        user.is_admin = request.form.get('is_admin') == 'on'
+        password = request.form['password']
+        if password:
+            user.password = password
+        db.session.commit()
+        flash('User updated successfully', 'success')
+        return redirect(url_for('admin'))
+    return render_template('user_update.html', user=user)
+ 
+@app.route('/user/delete/<int:id>', methods=['POST'])
+def delete_user(id):
+    user = User.query.get_or_404(id)
+    db.session.delete(user)
+    db.session.commit()
+    flash('User deleted successfully', 'success')
+    return redirect(url_for('admin'))
+ 
+@app.route('/user/listall')
+def list_all_users():
+    if not session.get('is_admin'):
+        flash('Unauthorized access', 'danger')
+        return redirect(url_for('login'))
+    users = User.query.all()
+    return render_template('user_listall.html', users=users)
+ 
+# CRUD de produtos
+@app.route('/product/create', methods=['GET', 'POST'])
+def create_product():
+    if request.method == 'POST':
+        name = request.form['name']
+        description = request.form['description']
+        price = float(request.form['price'])
+        new_product = Product(name=name, description=description, price=price)
+        db.session.add(new_product)
+        db.session.commit()
+        flash('Product created successfully', 'success')
+        return redirect(url_for('admin'))
+    return render_template('product_create.html')
+ 
+@app.route('/product/update/<int:id>', methods=['GET', 'POST'])
+def update_product(id):
+    product = Product.query.get_or_404(id)
+    if request.method == 'POST':
+        product.name = request.form['name']
+        product.description = request.form['description']
+        product.price = float(request.form['price'])
+        db.session.commit()
+        flash('Product updated successfully', 'success')
+        return redirect(url_for('admin'))
+    return render_template('product_update.html', product=product)
+ 
+@app.route('/product/delete/<int:id>', methods=['POST'])
+def delete_product(id):
+    product = Product.query.get_or_404(id)
+    db.session.delete(product)
+    db.session.commit()
+    flash('Product deleted successfully', 'success')
+    return redirect(url_for('admin'))
